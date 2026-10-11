@@ -1,6 +1,6 @@
 import { nf } from "../lib/data";
 
-/** Judul bagian bergaya grafis siaran: tab merah di kiri */
+/** Judul bagian. Di luar panel diberi tab merah miring di kiri. */
 export function SectionHead({ title, note, children }) {
   return (
     <div className="section-head">

@@ -49,7 +49,16 @@ export default function App() {
       </header>
 
       <main>
-        {state.status === "loading" && <p className="loading">Memuat data pemain...</p>}
+        {state.status === "loading" && (
+          <div className="page" aria-busy="true">
+            <span className="sr-only">Memuat data pemain</span>
+            <div className="sk sk-hero" />
+            <div className="sk sk-title" />
+            <div className="arch-grid">
+              {Array.from({ length: 6 }, (_, i) => <div key={i} className="sk sk-card" />)}
+            </div>
+          </div>
+        )}
 
         {state.status === "error" && (
           <div className="setup">

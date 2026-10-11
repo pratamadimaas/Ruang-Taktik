@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 /* Lokasi file JSON hasil export dari Google Colab (taruh di folder public/) */
 export const DATA_URL = "/football_dashboard.json";
 
-/* ---------- Label yang dipakai di UI ---------- */
+/* Label yang dipakai di UI */
 export const STAT_LABEL = {
   Gls_p90: "Gol",
   Ast_p90: "Assist",
@@ -47,7 +47,7 @@ export const DIMENSI_KET = {
   Disiplin: "Semakin jarang kartu kuning, semakin tinggi",
 };
 
-/* ---------- Warna arketipe ---------- */
+/* Warna arketipe */
 const WARNA_ARKETIPE = {
   "Elite Finisher": "#E8473B",
   "Wide Attacker (Volume Tinggi)": "#F28C28",
@@ -66,7 +66,7 @@ export function warnaArketipe(nama, daftar = []) {
   return CADANGAN[i % CADANGAN.length];
 }
 
-/* ---------- Format angka ---------- */
+/* Format angka */
 export const nf = (v, d = 0) =>
   v == null || Number.isNaN(v)
     ? "-"
@@ -94,7 +94,7 @@ export function statusTransfer(p) {
 
 export const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 
-/* ---------- Muat dan olah data ---------- */
+/* Muat dan olah data */
 function olah(raw) {
   const pemain = raw.pemain;
   const byId = new Map(pemain.map((p) => [p.id, p]));

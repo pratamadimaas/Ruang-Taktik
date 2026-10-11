@@ -2,23 +2,6 @@ import { nf, STAT_SHORT, STAT_LABEL, css } from "../lib/data";
 import ChartBox, { axis } from "../components/ChartBox";
 import { SectionHead } from "../components/Ui";
 
-const LANGKAH = [
-  ["Gabungkan dua musim", "Statistik musim 2025/26 penuh dijumlahkan dengan musim 2026/27 yang sedang berjalan, supaya angka per 90 menit lebih stabil. Klub dan posisi mengikuti musim terbaru."],
-  ["Hitung per 90 menit", "Gol, assist, tembakan, tekel, dan statistik lain dibagi jumlah 90 menit bermain, supaya pemain inti dan cadangan bisa dibandingkan."],
-  ["Standarisasi", "Semua statistik diubah ke skala yang sama dengan StandardScaler agar tidak ada satu statistik yang mendominasi."],
-  ["Kelompokkan dengan K-Means", "Jumlah kelompok dipilih lewat metode elbow dan silhouette score. Nama tiap kelompok ditentukan otomatis dari ciri statistiknya."],
-  ["Hitung kecocokan", "Setiap pemain diberi skor 0 sampai 100 di empat dimensi. Dua pemain dianggap cocok jika kekuatan mereka saling menutupi."],
-];
-
-const KELEBIHAN = [
-  "Data dua musim membuat statistik per 90 menit lebih stabil. Median menit main naik dari 180 menjadi lebih dari 1.300 menit.",
-  "Statistik per 90 menit membuat pemain inti dan pemain rotasi bisa dibandingkan secara adil.",
-  "Kelompok gaya main terbentuk dari data, bukan dari label posisi. Bek sayap yang rajin mengirim umpan silang bisa berkumpul dengan gelandang kreatif.",
-  "Mudah dijelaskan. Setiap pemain punya skor 0 sampai 100 di lima dimensi, dan setiap rekomendasi duet disertai alasannya.",
-  "Bisa dipakai lintas liga, misalnya untuk mencari pemain dengan gaya main mirip sebagai alternatif transfer.",
-  "Bisa diulang. Seluruh proses ada di satu notebook dengan random_state tetap, dan nama kelompok ditentukan otomatis sehingga konsisten saat data diperbarui.",
-];
-
 const SUMBER = [
   {
     judul: "Football Players Stats 2025/2026",
@@ -35,10 +18,23 @@ const SUMBER = [
 export default function Metodologi({ data }) {
   const { pca, klasifikasi, meta } = data;
   const loadings = Object.entries(pca.loadings);
+  const median = (arr) => { const a = [...arr].sort((x, y) => x - y); return a[Math.floor(a.length / 2)] ?? 0; };
+  const adaMusimIni = data.pemain.some((p) => p.menit_musim_ini != null);
+
+  const LANGKAH = [
+    ["Gabungkan dua musim", "Statistik musim 2025/26 penuh dijumlahkan dengan musim 2026/27 yang sedang berjalan. Klub dan posisi mengikuti musim terbaru." +
+      (adaMusimIni
+        ? ` Median menit main per pemain naik dari ${nf(median(data.pemain.map((p) => p.menit_musim_ini ?? 0)))} menjadi ${nf(median(data.pemain.map((p) => p.main_90 * 90)))} menit, jadi angka per 90 menit lebih stabil.`
+        : "")],
+    ["Hitung per 90 menit", "Gol, assist, tembakan, tekel, dan statistik lain dibagi jumlah 90 menit bermain, supaya pemain inti dan cadangan bisa dibandingkan."],
+    ["Standarisasi", "Semua statistik diubah ke skala yang sama dengan StandardScaler agar tidak ada satu statistik yang mendominasi."],
+    ["Kelompokkan dengan K-Means", "Jumlah kelompok dipilih lewat metode elbow dan silhouette score. Kelompok terbentuk dari statistik, bukan label posisi, jadi bek sayap yang sering mengirim umpan silang bisa satu kelompok dengan gelandang kreatif. Nama kelompok ditentukan otomatis dari ciri statistiknya, dan random_state tetap membuat hasilnya sama setiap kali dijalankan ulang."],
+    ["Hitung kecocokan", `Setiap pemain diberi skor 0 sampai 100 di ${meta.dimensi.length} dimensi. Dua pemain dianggap cocok jika kekuatan mereka saling menutupi, dan setiap rekomendasi duet disertai alasannya.`],
+  ];
 
   const KETERBATASAN = [
-    "Batas antar kelompok tidak tegas. Silhouette score untuk 6 kelompok tergolong rendah, artinya gaya main lebih berupa spektrum dan pemain di perbatasan bisa cocok di dua kelompok.",
-    "Hanya 10 statistik yang dipakai. Tidak ada data umpan, dribel, duel udara, atau expected goals, sehingga gelandang jangkar seperti Vitinha di Paris SG bisa masuk kelompok Pemain Posisional.",
+    `Batas antar kelompok tidak tegas. Silhouette score untuk ${meta.k_cluster ?? data.arketipe.length} kelompok tergolong rendah, artinya gaya main lebih berupa spektrum dan pemain di perbatasan bisa cocok di dua kelompok.`,
+    `Hanya ${meta.fitur.length} statistik yang dipakai. Tidak ada data umpan, dribel, duel udara, atau expected goals, sehingga gelandang jangkar seperti Vitinha di Paris SG bisa masuk kelompok Pemain Posisional.`,
     "Gaya tim memengaruhi angka. Pemain di tim yang jarang menguasai bola cenderung punya tekel dan intersep lebih banyak, meskipun belum tentu lebih baik dalam bertahan.",
     "Kekuatan liga tidak disesuaikan, sehingga satu gol di liga mana pun dihitung sama.",
     "Skor kecocokan mengukur seberapa saling melengkapi statistik dua pemain, dengan bobot yang ditentukan dari logika dan belum divalidasi dengan hasil pertandingan. Chemistry di lapangan juga dipengaruhi taktik dan pola umpan.",
@@ -53,18 +49,20 @@ export default function Metodologi({ data }) {
         <p>Semua angka di dashboard ini berasal dari notebook Google Colab yang sama, tanpa diubah manual.</p>
       </header>
 
-      <ol className="steps">
-        {LANGKAH.map(([judul, isi], i) => (
-          <li key={judul}>
-            <span className="step-n">{i + 1}</span>
-            <div><h3>{judul}</h3><p>{isi}</p></div>
-          </li>
-        ))}
-      </ol>
+      <section className="panel">
+        <ol className="steps">
+          {LANGKAH.map(([judul, isi]) => (
+            <li key={judul}>
+              <h3>{judul}</h3>
+              <p>{isi}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
 
       <div className="split">
         <section className="panel">
-          <SectionHead title="Apa yang membentuk peta gaya main" note="Loading PCA tiap statistik" />
+          <SectionHead title="Pembentuk peta gaya main" note="Loading PCA tiap statistik" />
           <ChartBox
             label="Loading PCA"
             height={340}
@@ -90,7 +88,7 @@ export default function Metodologi({ data }) {
 
         {klasifikasi ? (
           <section className="panel">
-            <SectionHead title="Bisakah statistik menebak posisi?" note={`Random Forest, akurasi ${nf(klasifikasi.akurasi * 100, 1)}% di data uji`} />
+            <SectionHead title="Menebak posisi dari statistik" note={`Random Forest, akurasi ${nf(klasifikasi.akurasi * 100, 1)}% di data uji`} />
             <div className="cm" style={{ "--n": klasifikasi.label.length }}>
               <span className="cm-corner">Asli \ Prediksi</span>
               {klasifikasi.label.map((l) => <span key={l} className="cm-h">{l}</span>)}
@@ -125,21 +123,12 @@ export default function Metodologi({ data }) {
         )}
       </div>
 
-      <div className="split">
-        <section className="panel note good">
-          <SectionHead title="Kelebihan analisis ini" />
-          <ul className="caveats">
-            {KELEBIHAN.map((t) => <li key={t}>{t}</li>)}
-          </ul>
-        </section>
-
-        <section className="panel note">
-          <SectionHead title="Keterbatasan yang perlu diingat" />
-          <ul className="caveats">
-            {KETERBATASAN.map((t) => <li key={t}>{t}</li>)}
-          </ul>
-        </section>
-      </div>
+      <section className="panel">
+        <SectionHead title="Keterbatasan" />
+        <ul className="caveats">
+          {KETERBATASAN.map((t) => <li key={t}>{t}</li>)}
+        </ul>
+      </section>
 
       <section className="panel next">
         <SectionHead title="Rencana pengembangan" />
@@ -148,7 +137,8 @@ export default function Metodologi({ data }) {
           menyesuaikan angka dengan kekuatan liga, serta menguji skor kecocokan dengan hasil pertandingan duet pemain.
         </p>
       </section>
-        <section className="panel sources">
+
+      <section className="panel sources">
         <SectionHead title="Sumber data" note="Dataset publik di Kaggle, diunggah oleh Hubert Sidorowicz" />
         <ul>
           {SUMBER.map((s) => (

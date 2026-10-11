@@ -41,15 +41,10 @@ export default function Ringkasan({ data, bukaPemain, bukaArketipe }) {
         <img src="/cover.jpg" alt="" className="hero-img" />
         <div className="hero-shade" />
         <div className="hero-body">
-          <p className="hero-kicker">Liga top Eropa, musim {teksMusim(meta)}</p>
-          <h1>
-            {nf(meta.jumlah_pemain)} pemain.
-            <br />
-            {arketipe.length} cara bermain.
-          </h1>
+          <p className="hero-kicker">Musim {teksMusim(meta)}</p>
+          <h1>{arketipe.length} gaya main dari {nf(meta.jumlah_pemain)} pemain liga top Eropa</h1>
           <p className="hero-text">
-            Pemain outfield dari lima liga top Eropa dikelompokkan berdasarkan statistik per 90 menit. Lihat gaya main
-            mereka, siapa yang paling saling melengkapi di lapangan, dan bagaimana rekrutan baru mengubah skuad.
+            Pemain outfield dikelompokkan dari statistik per 90 menit. Lihat gaya main, duet terbaik, dan rekrutan baru tiap klub.
           </p>
         </div>
         <div className="scorebug" aria-label="Ringkasan data">
@@ -60,7 +55,7 @@ export default function Ringkasan({ data, bukaPemain, bukaArketipe }) {
         </div>
       </section>
 
-      <SectionHead title="Enam arketipe" note="Klik salah satu untuk melihat daftar pemainnya" />
+      <SectionHead title="Arketipe gaya main" note="Pilih arketipe untuk melihat daftar pemainnya" />
       <div className="arch-grid">
         {arketipe.map((a) => (
           <button key={a.nama} className="arch-card" style={{ "--c": a.warna }} onClick={() => bukaArketipe(a.nama)}>
